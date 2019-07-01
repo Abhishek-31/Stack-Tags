@@ -3,13 +3,12 @@
 """
 Created on Tue Jun  4 13:39:03 2019
 
-@author: descentis
+@author: abhishek-31
 """
 import xml.etree.ElementTree as ET
 import glob
 import numpy as np
 from multiprocessing import Process, Lock, Manager
-
 
 def findTags(*args, **kwargs):
     #print(list_tags)
@@ -107,7 +106,6 @@ def findAllTags(list_tags,*args, **kwargs):
             fileList.append(i.tolist())        
     
     
-
     
     manager = Manager()
     tagPosts = manager.dict()
