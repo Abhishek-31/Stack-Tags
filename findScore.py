@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 """
-Created on Tue Jun  4 13:39:03 2019
+Created on Mon Jul  1 17:11:40 2019
 
 @author: abhishek-31
 """
@@ -9,17 +9,19 @@ import xml.etree.ElementTree as ET
 import glob
 import numpy as np
 from multiprocessing import Process, Lock, Manager
-
-def findTags(*args, **kwargs):
+def findScore(*args, **kwargs):
+    kwargs["l"].acquire()
+    ma=kwargs['ma']
+    mate=kwargs['mate']
     print("Inside the function of findTags")
-    if(kwargs.get('list_tags')!=None):
-        list_tags = kwargs['list_tags']
-    print(list_tags)        
+#    if(kwargs.get('list_tags')!=None):
+#        list_tags = kwargs['list_tags']
+#    print(list_tags)        
     if(kwargs.get('file_path')!=None):
         file_name = kwargs['file_path']            
         tree = ET.parse(file_name)            
         root = tree.getroot()
-
+    
        
 
         uList = []
@@ -41,39 +43,29 @@ def findTags(*args, **kwargs):
             
             tree = ET.parse(f)            
             root = tree.getroot()
-            postList = []
+           # postList = []
             for child in root:
                 if('KnowledgeData' in child.tag):
                     for ch in child:
-                        if('Instance' in ch.tag):
+                        if('Instance' in ch.tag and ch.attrib['Id']=="1"):
                             for newch in ch:
-                                if('Body' in newch.tag):
+                                if('Credit' in newch.tag):
                                     for txt in newch:
-                                        if('Text' in txt.tag):                                            
-                                            postList.append(txt.text)                            
-                                
-                                if('Tags' in newch.tag):
-                                    if(list_tags in newch.text.lower()):
-                                        print(f +': '+ list_tags)
-                                        if(kwargs.get('tagPosts')!=None):
-                                            kwargs['tagPosts'][f] = []
-                                        continue
-                                    else:
-                                        #print(f+ "rejected" +"tags :"+ newch.text)
-                                        postList = []
-                                        
-                                        
-                                        
+                                        if('Score' in txt.tag):
+                                            mate["value"]+=1
+                                            print(f+" : " + "score is"+ txt.text)
+            
+                                            ma[txt.text]=ma.get(txt.text,0)+1
+                                            print(ma[txt.text])
+            kwargs['ma']=ma                                
 
+           # if(kwargs.get('tagPosts')!=None):
+               # if(kwargs['tagPosts'].get(f)!=None):
+                 #   kwargs['tagPosts'][f] = postList
+                 #print(kwargs['revisionLength'])
+    kwargs["l"].release()            
 
-            if(kwargs.get('tagPosts')!=None):
-                if(kwargs['tagPosts'].get(f)!=None):
-                    kwargs['tagPosts'][f] = postList
-                #print(kwargs['revisionLength'])
-    else:
-        print("No arguments provided")    
-
-def findAllTags(list_tags,*args, **kwargs):
+def findAllScore(*args, **kwargs):
     #t1 = time.time()
     
     
@@ -86,7 +78,7 @@ def findAllTags(list_tags,*args, **kwargs):
         file_list = glob.glob(dir_path+'/*.knolml')
         
     fileNum = len(file_list)
-    
+    print(fileNum)
     if(kwargs.get('c_num')!=None):
         cnum = kwargs['c_num']
     elif(fileNum<24):
@@ -110,7 +102,9 @@ def findAllTags(list_tags,*args, **kwargs):
     
     manager = Manager()
     tagPosts = manager.dict()
-
+    ma=manager.dict()
+    mate=manager.dict()
+    mate["value"]=0
     l = Lock()
     processDict = {}
     if(fileNum<cnum):
@@ -118,7 +112,7 @@ def findAllTags(list_tags,*args, **kwargs):
     else:
         pNum = cnum
     for i in range(pNum):
-        processDict[i+1] = Process(target=findTags, kwargs={'list_tags':list_tags,'file_name':fileList[i],'tagPosts':tagPosts,'l': l})
+        processDict[i+1] = Process(target=findScore, kwargs={'file_name':fileList[i],'mate':mate,'tagPosts':tagPosts,'l': l,'ma':ma})
         
         #processDict[i+1] = Process(target=self.countWords, kwargs={'file_name':fileList[i], 'lastRev':lastRev,'l': l})
     for i in range(pNum):
@@ -131,4 +125,13 @@ def findAllTags(list_tags,*args, **kwargs):
     t2 = time.time()
     print(t2-t1)
     '''
+    #print(l)
+    print(len(ma))
+    x=0
+    for key,val in ma.items():
+        x=x+val
+        print(str(key) +" : "+str(val))
+    
+    print(x)
+    print(mate["value"])
     return tagPosts 
