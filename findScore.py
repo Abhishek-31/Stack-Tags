@@ -9,8 +9,9 @@ import xml.etree.ElementTree as ET
 import glob
 import numpy as np
 from multiprocessing import Process, Lock, Manager
+import shutil
 def findScore(*args, **kwargs):
-    kwargs["l"].acquire()
+    
     ma=kwargs['ma']
     mate=kwargs['mate']
     print("Inside the function of findTags")
@@ -52,18 +53,21 @@ def findScore(*args, **kwargs):
                                 if('Credit' in newch.tag):
                                     for txt in newch:
                                         if('Score' in txt.tag):
+                                            kwargs["l"].acquire()
                                             mate["value"]+=1
                                             print(f+" : " + "score is"+ txt.text)
-            
+                                            if(int(txt.text)>=4):
+                                                shutil.copy(f, '/home/abhishek/Documents/Quantum-threshold')
                                             ma[txt.text]=ma.get(txt.text,0)+1
                                             print(ma[txt.text])
+                                            kwargs["l"].release()
             kwargs['ma']=ma                                
 
            # if(kwargs.get('tagPosts')!=None):
                # if(kwargs['tagPosts'].get(f)!=None):
                  #   kwargs['tagPosts'][f] = postList
                  #print(kwargs['revisionLength'])
-    kwargs["l"].release()            
+                
 
 def findAllScore(*args, **kwargs):
     #t1 = time.time()

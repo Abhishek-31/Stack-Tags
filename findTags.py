@@ -62,10 +62,7 @@ def findTags(*args, **kwargs):
                                         #print(f+ "rejected" +"tags :"+ newch.text)
                                         postList = []
                                         
-                                        
-                                        
-
-
+                    
             if(kwargs.get('tagPosts')!=None):
                 if(kwargs['tagPosts'].get(f)!=None):
                     kwargs['tagPosts'][f] = postList
